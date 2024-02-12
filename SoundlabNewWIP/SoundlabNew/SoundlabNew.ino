@@ -1,3 +1,10 @@
+#include <Encoder.h>
+
+Encoder knobOne(5, 6);
+Encoder knobTwo(7, 8);
+long positionLeft  = -999;
+long positionRight = -999;
+
 const int amount = 8;
 float smoothingFactor = 0.09;
 
@@ -51,6 +58,30 @@ void setup() {
 }
 
 void loop() {
+
+  //Read encoderPos
+    long newLeft, newRight;
+  newLeft = knobOne.read();
+  newRight = knobTwo.read();
+  if (newLeft != positionLeft || newRight != positionRight) {
+
+    positionLeft = newLeft;
+    positionRight = newRight;
+  }
+    Serial.print("Left = ");
+    Serial.print(newLeft);
+    Serial.print(", Right = ");
+    Serial.print(newRight);
+    Serial.println();
+
+    
+  Serial.print("knops: ");
+
+  Serial.print(knopCheck(BUTTON1_PIN, 1));
+  Serial.print("  ");
+  Serial.println(knopCheck(BUTTON2_PIN, 2));
+
+  //read Stretchies
   for (int i = 0; i < amount; i++) {
     //read sensordata
     sensorValue[i] = analogRead(sensorPin[i]);
@@ -65,11 +96,7 @@ void loop() {
      Serial.print(" ");
   };
   Serial.println();
-  Serial.print("knops: ");
 
-  Serial.print(knopCheck(BUTTON1_PIN, 1));
-  Serial.print("  ");
-  Serial.println(knopCheck(BUTTON2_PIN, 2));
 
   /*if(buttoncheck){
     led op rood
