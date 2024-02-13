@@ -52,12 +52,22 @@ void setup() {
   pinMode(BUTTON1_PIN, INPUT_PULLUP);
   pinMode(BUTTON2_PIN, INPUT_PULLUP);
 
+  pinMode(9, OUTPUT);
+  pinMode(10, OUTPUT);
+  pinMode(11, OUTPUT);
   Serial.begin(115200);
 
   //calibrate()
 }
 
 void loop() {
+
+  analogWrite(9, 255-255);
+ analogWrite(10, 255-0);
+ analogWrite(11, 255-255);
+
+
+
 
   //Read encoderPos
     long newLeft, newRight;
