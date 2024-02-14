@@ -61,74 +61,10 @@ void setup() {
 }
 
 void loop() {
-
-
-
-
-
-
-  //Read encoderPos
-  long newLeft, newRight;
-  long scaledLeft, scaledRight;
-  newLeft = knobOne.read();
-  scaledLeft = newLeft/4;
-
-  newRight = knobTwo.read();
-  scaledRight = newRight/4;
-
-  if (newLeft != positionLeft || newRight != positionRight) {
-    positionLeft = newLeft;
-    positionRight = newRight;
-
-  }
-    if(scaledRight >= 127){
-    scaledRight = 127;
-  } else if (scaledRight <= 0){
-    scaledRight = 0;
-  }
-
-    if(scaledLeft >= 127){
-    scaledLeft = 127;
-  } else if (scaledLeft <= 0){
-    scaledLeft = 0;
-  }
-
-  Serial.print("Left = ");
-  Serial.print(scaledLeft);
-  Serial.print(", Right = ");
-  Serial.print(scaledRight);
-  Serial.println();
-
-
-
-
-  analogWrite(9, 255 - scaledLeft*2);
-  analogWrite(10, 255 - scaledRight*2);
-  analogWrite(11, 255 - 255);
-
-
-  Serial.print("knops: ");
-
-  Serial.print(knopCheck(BUTTON1_PIN, 1));
-  Serial.print("  ");
-  Serial.println(knopCheck(BUTTON2_PIN, 2));
-
-  //read Stretchies
-  for (int i = 0; i < amount; i++) {
-    //read sensordata
-    sensorValue[i] = analogRead(sensorPin[i]);
-  };
-
-  //  print sensor data
-  Serial.print("sensors ");
-
-  for (int i = 0; i < amount; i++) {
-
-    Serial.print(sensorValue[i]);
-    Serial.print(" ");
-  };
-  Serial.println();
-
+  //Read Data
+  readEncoderPos();
+  readButton();
+  readSensors();
 
   /*if(buttoncheck){
     led op rood
@@ -174,6 +110,24 @@ void calibrate() {
 
   */
 }
+
+void readSensors() {
+  //read Stretchies
+  for (int i = 0; i < amount; i++) {
+    //read sensordata
+    sensorValue[i] = analogRead(sensorPin[i]);
+  };
+
+  Serial.print("sensors ");
+
+  for (int i = 0; i < amount; i++) {
+
+    Serial.print(sensorValue[i]);
+    Serial.print(" ");
+  };
+  Serial.println();
+}
+
 
 bool knopCheck(int pin, int pinChoice) {
   bool result = false;
@@ -225,4 +179,48 @@ bool knopCheck(int pin, int pinChoice) {
 
   return result;
   //if knopaan return true else return false
+}
+
+void readEncoderPos() {
+  long newLeft, newRight;
+  long scaledLeft, scaledRight;
+  newLeft = knobOne.read();
+  scaledLeft = newLeft / 4;
+
+  newRight = knobTwo.read();
+  scaledRight = newRight / 4;
+
+  if (newLeft != positionLeft || newRight != positionRight) {
+    positionLeft = newLeft;
+    positionRight = newRight;
+  }
+  if (scaledRight >= 127) {
+    scaledRight = 127;
+  } else if (scaledRight <= 0) {
+    scaledRight = 0;
+  }
+
+  if (scaledLeft >= 127) {
+    scaledLeft = 127;
+  } else if (scaledLeft <= 0) {
+    scaledLeft = 0;
+  }
+
+  Serial.print("Left = ");
+  Serial.print(scaledLeft);
+  Serial.print(", Right = ");
+  Serial.print(scaledRight);
+  Serial.println();
+
+  analogWrite(9, 255 - scaledLeft * 2);
+  analogWrite(10, 255 - scaledRight * 2);
+  analogWrite(11, 255 - 255);
+}
+
+void readButton() {
+  Serial.print("knops: ");
+
+  Serial.print(knopCheck(BUTTON1_PIN, 1));
+  Serial.print("  ");
+  Serial.println(knopCheck(BUTTON2_PIN, 2));
 }
