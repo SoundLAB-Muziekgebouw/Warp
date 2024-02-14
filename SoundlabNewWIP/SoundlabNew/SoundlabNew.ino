@@ -59,7 +59,7 @@ void setup() {
   pinMode(10, OUTPUT);
   pinMode(11, OUTPUT);
   Serial.begin(115200);
-
+  Serial.println("calibrate min values:");
 }
 
 void loop() {
@@ -73,16 +73,6 @@ void loop() {
   delay(20);
 }
 
-//
-
-
-int scaler(int val, int min, int max){
-  int scaled_value = map(val, 0, 127, min, max);
-  return scaled_value;
-}
-
-
-
 void calibrate() {
 
   // Serial.print(calibrationState);
@@ -91,22 +81,25 @@ void calibrate() {
   if (buttonState == LOW && buttonState2 == LOW) {
     calibrationState = 1;
 
+    Serial.println("calibrate min values:");
   } else if (buttonState == LOW && calibrationState == 1) {
     calibrationState = 2;
-    Serial.print("min");
-    for(int i = 0; i < amount; i++){
+    for (int i = 0; i < amount; i++) {
       sensorMin[i] = sensorValue[i];
       Serial.println(sensorMin[i]);
     }
+    Serial.println("calibrate max values:");
 
 
   } else if (buttonState2 == LOW && calibrationState == 2) {
-        Serial.print("max");
 
-    for(int i = 0; i < amount; i++){
+    for (int i = 0; i < amount; i++) {
       sensorMax[i] = sensorValue[i];
       Serial.println(sensorMax[i]);
-    }    calibrationState = 0;
+    }
+    calibrationState = 0;
+    Serial.println("Calibrating done");
+
   }
 
 
@@ -130,7 +123,7 @@ void readSensors() {
   for (int i = 0; i < amount; i++) {
     //read sensordata
     sensorValue[i] = analogRead(sensorPin[i]);
-    scaledSensorValue[i] = map(analogRead(sensorPin[i]),0, 127, sensorMin[i], sensorMax[i]);
+    scaledSensorValue[i] = map(analogRead(sensorPin[i]), 0, 127, sensorMin[i], sensorMax[i]);
   };
   midi();
   // Serial.print("sensors ");
