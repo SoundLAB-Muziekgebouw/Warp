@@ -39,8 +39,8 @@ int lastButtonState2 = HIGH;  // the previous reading from the input pin
 unsigned long lastDebounceTime = 0;   // the last time the output pin was toggled
 unsigned long lastDebounceTime2 = 0;  // the last time the output pin was toggled
 
-bool clicked = false;
-bool clicked2 = false;
+bool clicked = false; //creates button toggle
+bool clicked2 = false; //creates button toggle
 
 unsigned long debounceDelay = 50;
 
@@ -121,11 +121,12 @@ void readSensors() {
     scaledSensorValue[i] = map(analogRead(sensorPin[i]), sensorMin[i], sensorMax[i], 0, 127);
   };
   midi();
+
   // Serial.print("sensors ");
 
   // for (int i = 0; i < amount; i++) {
 
-  //   Serial.print(sensorValue[i]);
+  //   Serial.print(scaledSensorValue[i]);
   //   Serial.print(" ");
   // };
   // Serial.println();
@@ -191,30 +192,10 @@ bool knopCheck(int pin, int pinChoice) {
 }
 
 void menu() {
-  /*if(buttoncheck){
-    led op rood
-    header = 0
-    waitforselect(knopcheck(1)){
-      header = readknop1;
-    }
-
-    waitforselect(knopcheck(2)){
-      menuSettings[header] = knop2read;
-    }
-
-    if (knopCheck(2)) 
-      header op 0
-      buttoncheck = 0
-      led uit
-  }
-  if(knopCheck(1)){
-    buttoncheck = true
-  }
-     */
 }
 
 void readEncoderPos() {
-  //read encodepositions and scale them to 0 - 127
+  //read encoderpositions and scale them to 0 - 127
   long newLeft, newRight;
   long scaledLeft, scaledRight;
   newLeft = knobOne.read();
