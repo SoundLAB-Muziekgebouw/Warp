@@ -1,7 +1,7 @@
 #include <Encoder.h>
 
-Encoder knobOne(5, 6);
-Encoder knobTwo(7, 8);
+Encoder knobOne(7, 8);
+Encoder knobTwo(5, 6);
 long positionLeft = -999;
 long positionRight = -999;
 
@@ -24,15 +24,15 @@ const int BUTTON1_PIN = 2;  // the number of the pushbutton pin
 const int BUTTON2_PIN = 3;  // the number of the pushbutton pin
 
 // Variables will change:
-int lastState = LOW;   // the previous state from the input pin
-int lastState2 = LOW;  // the previous state from the input pin
+int lastState = HIGH;   // the previous state from the input pin
+int lastState2 = HIGH;  // the previous state from the input pin
 
 
-int buttonState;
-int buttonState2;
+int buttonState = HIGH;
+int buttonState2 = HIGH;
 
-int lastButtonState = LOW;   // the previous reading from the input pin
-int lastButtonState2 = LOW;  // the previous reading from the input pin
+int lastButtonState = HIGH;   // the previous reading from the input pin
+int lastButtonState2 = HIGH;  // the previous reading from the input pin
 
 
 unsigned long lastDebounceTime = 0;   // the last time the output pin was toggled
@@ -46,6 +46,8 @@ unsigned long debounceDelay = 50;
 String onOff;
 
 int readingButton;
+int calibrationState = 0;
+
 
 
 void setup() {
@@ -56,19 +58,67 @@ void setup() {
   pinMode(10, OUTPUT);
   pinMode(11, OUTPUT);
   Serial.begin(115200);
-
+  // calibrationState = 0;
   //calibrate()
 }
 
 void loop() {
   //Read Data
+  analogWrite(9, 255);
+  analogWrite(10, 255);
+  analogWrite(11, 255 - 255);
+
+  readSensors();
   readEncoderPos();
   readButton();
-  readSensors();
+  calibrate();
+
+
   delay(20);
 }
 
+//
+
 void calibrate() {
+
+  // Serial.print(calibrationState);
+  // Serial.println(" Callibri");
+
+  if (buttonState == LOW && buttonState2 == LOW) {
+    calibrationState = 1;
+
+  } else if (buttonState == LOW && calibrationState == 1) {
+    calibrationState = 2;
+    Serial.print("min");
+    for(int i = 0; i < amount; i++){
+      sensorMin[i] = sensorValue[i];
+      Serial.println(sensorMin[i]);
+    }
+
+
+  } else if (buttonState2 == LOW && calibrationState == 2) {
+        Serial.print("max");
+
+    for(int i = 0; i < amount; i++){
+      sensorMax[i] = sensorValue[i];
+      Serial.println(sensorMax[i]);
+    }    calibrationState = 0;
+  }
+
+
+  if (calibrationState == 1) {
+    analogWrite(9, 0);
+    analogWrite(10, 0);
+    analogWrite(11, 255);
+  } else if (calibrationState == 2) {
+    analogWrite(9, 255);
+    analogWrite(10, 0);
+    analogWrite(11, 255);
+  } else if (calibrationState == 0) {
+    analogWrite(9, 255);
+    analogWrite(10, 255);
+    analogWrite(11, 255);
+  }
 }
 
 void readSensors() {
@@ -77,15 +127,18 @@ void readSensors() {
     //read sensordata
     sensorValue[i] = analogRead(sensorPin[i]);
   };
+  midi();
+  // Serial.print("sensors ");
 
-  Serial.print("sensors ");
+  // for (int i = 0; i < amount; i++) {
 
-  for (int i = 0; i < amount; i++) {
+  //   Serial.print(sensorValue[i]);
+  //   Serial.print(" ");
+  // };
+  // Serial.println();
 
-    Serial.print(sensorValue[i]);
-    Serial.print(" ");
-  };
-  Serial.println();
+
+  // usbMIDI.sendControlChange(10, volume_param, 1);
 }
 
 
@@ -137,6 +190,9 @@ bool knopCheck(int pin, int pinChoice) {
     }
     lastButtonState2 = readingButton;
   }
+  // Serial.print(pin);
+  // Serial.print(".  ");
+  // Serial.println(result);
 
   return result;
 }
@@ -190,22 +246,29 @@ void readEncoderPos() {
     scaledLeft = 0;
   }
 
-  Serial.print("Left = ");
-  Serial.print(scaledLeft);
-  Serial.print(", Right = ");
-  Serial.print(scaledRight);
-  Serial.println();
-
-  analogWrite(9, 255 - scaledLeft * 2);
-  analogWrite(10, 255 - scaledRight * 2);
-  analogWrite(11, 255 - 255);
+  // Serial.print("Left = ");
+  // Serial.print(scaledLeft);
+  // Serial.print(", Right = ");
+  // Serial.print(scaledRight);
+  // Serial.println();
 }
 
 void readButton() {
   //check both buttons for state
-  Serial.print("knops: ");
+  // Serial.print("knops: ");
 
-  Serial.print(knopCheck(BUTTON1_PIN, 1));
-  Serial.print("  ");
-  Serial.println(knopCheck(BUTTON2_PIN, 2));
+  knopCheck(BUTTON1_PIN, 1);
+  // Serial.print("  ");
+  knopCheck(BUTTON2_PIN, 2);
+}
+
+void midi() {
+  usbMIDI.sendControlChange(1, sensorValue[0], 1);
+  usbMIDI.sendControlChange(2, sensorValue[1], 1);
+  usbMIDI.sendControlChange(3, sensorValue[2], 1);
+  usbMIDI.sendControlChange(4, sensorValue[3], 1);
+  usbMIDI.sendControlChange(5, sensorValue[4], 1);
+  usbMIDI.sendControlChange(6, sensorValue[5], 1);
+  usbMIDI.sendControlChange(7, sensorValue[6], 1);
+  usbMIDI.sendControlChange(8, sensorValue[7], 1);
 }
