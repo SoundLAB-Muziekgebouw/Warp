@@ -10,6 +10,7 @@ float smoothingFactor = 0.09;
 
 const int sensorPin[amount] = { 16, 17, 18, 19, 20, 21, 22, 23 };
 int sensorValue[amount] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+int scaledSensorValue[amount] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 int sensorMax[amount] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 int sensorMin[amount] = { 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -46,7 +47,7 @@ unsigned long debounceDelay = 50;
 String onOff;
 
 int readingButton;
-int calibrationState = 0;
+int calibrationState = 1;
 
 
 
@@ -58,16 +59,11 @@ void setup() {
   pinMode(10, OUTPUT);
   pinMode(11, OUTPUT);
   Serial.begin(115200);
-  // calibrationState = 0;
-  //calibrate()
+
 }
 
 void loop() {
   //Read Data
-  analogWrite(9, 255);
-  analogWrite(10, 255);
-  analogWrite(11, 255 - 255);
-
   readSensors();
   readEncoderPos();
   readButton();
@@ -78,6 +74,14 @@ void loop() {
 }
 
 //
+
+
+int scaler(int val, int min, int max){
+  int scaled_value = map(val, 0, 127, min, max);
+  return scaled_value;
+}
+
+
 
 void calibrate() {
 
@@ -126,6 +130,7 @@ void readSensors() {
   for (int i = 0; i < amount; i++) {
     //read sensordata
     sensorValue[i] = analogRead(sensorPin[i]);
+    scaledSensorValue[i] = map(analogRead(sensorPin[i]),0, 127, sensorMin[i], sensorMax[i]);
   };
   midi();
   // Serial.print("sensors ");
@@ -263,12 +268,12 @@ void readButton() {
 }
 
 void midi() {
-  usbMIDI.sendControlChange(1, sensorValue[0], 1);
-  usbMIDI.sendControlChange(2, sensorValue[1], 1);
-  usbMIDI.sendControlChange(3, sensorValue[2], 1);
-  usbMIDI.sendControlChange(4, sensorValue[3], 1);
-  usbMIDI.sendControlChange(5, sensorValue[4], 1);
-  usbMIDI.sendControlChange(6, sensorValue[5], 1);
-  usbMIDI.sendControlChange(7, sensorValue[6], 1);
-  usbMIDI.sendControlChange(8, sensorValue[7], 1);
+  usbMIDI.sendControlChange(1, scaledSensorValue[0], 1);
+  usbMIDI.sendControlChange(2, scaledSensorValue[1], 1);
+  usbMIDI.sendControlChange(3, scaledSensorValue[2], 1);
+  usbMIDI.sendControlChange(4, scaledSensorValue[3], 1);
+  usbMIDI.sendControlChange(5, scaledSensorValue[4], 1);
+  usbMIDI.sendControlChange(6, scaledSensorValue[5], 1);
+  usbMIDI.sendControlChange(7, scaledSensorValue[6], 1);
+  usbMIDI.sendControlChange(8, scaledSensorValue[7], 1);
 }
