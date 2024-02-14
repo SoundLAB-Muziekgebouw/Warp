@@ -68,15 +68,10 @@ void loop() {
   readEncoderPos();
   readButton();
   calibrate();
-
-
   delay(20);
 }
 
 void calibrate() {
-
-  // Serial.print(calibrationState);
-  // Serial.println(" Callibri");
 
   if (buttonState == LOW && buttonState2 == LOW) {
     calibrationState = 1;
@@ -123,7 +118,7 @@ void readSensors() {
   for (int i = 0; i < amount; i++) {
     //read sensordata
     sensorValue[i] = analogRead(sensorPin[i]);
-    scaledSensorValue[i] = map(analogRead(sensorPin[i]), 0, 127, sensorMin[i], sensorMax[i]);
+    scaledSensorValue[i] = map(analogRead(sensorPin[i]), sensorMin[i], sensorMax[i], 0, 127);
   };
   midi();
   // Serial.print("sensors ");
