@@ -65,54 +65,14 @@ void loop() {
   readEncoderPos();
   readButton();
   readSensors();
-
-  /*if(buttoncheck){
-    led op rood
-    header = 0
-    waitforselect(knopcheck(1)){
-      header = readknop1;
-    }
-
-    waitforselect(knopcheck(2)){
-      menuSettings[header] = knop2read;
-    }
-
-    if (knopCheck(2)) 
-      header op 0
-      buttoncheck = 0
-      led uit
-  }
-  if(knopCheck(1)){
-    buttoncheck = true
-  }
-     */
-
   delay(20);
 }
 
 void calibrate() {
-  /*
-  led geel
-   waitforselect(knopcheck(1)){
-      forloop{
-        vul minindex
-      }
-    }
-
-    waitforselect(knopcheck(1)){
-      forloop{
-        vul plusindex
-      }
-    }
-  if(knopCheck(1)){
-    exit de boel
-  }
-
-  */
 }
 
 void readSensors() {
-  //read Stretchies
+  //read StretchSensors and Serial Send data
   for (int i = 0; i < amount; i++) {
     //read sensordata
     sensorValue[i] = analogRead(sensorPin[i]);
@@ -130,6 +90,7 @@ void readSensors() {
 
 
 bool knopCheck(int pin, int pinChoice) {
+  //check for selected button if pressed
   bool result = false;
   readingButton = digitalRead(pin);
 
@@ -178,7 +139,29 @@ bool knopCheck(int pin, int pinChoice) {
   }
 
   return result;
-  //if knopaan return true else return false
+}
+
+void menu() {
+  /*if(buttoncheck){
+    led op rood
+    header = 0
+    waitforselect(knopcheck(1)){
+      header = readknop1;
+    }
+
+    waitforselect(knopcheck(2)){
+      menuSettings[header] = knop2read;
+    }
+
+    if (knopCheck(2)) 
+      header op 0
+      buttoncheck = 0
+      led uit
+  }
+  if(knopCheck(1)){
+    buttoncheck = true
+  }
+     */
 }
 
 void readEncoderPos() {
