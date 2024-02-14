@@ -2,7 +2,7 @@
 
 Encoder knobOne(5, 6);
 Encoder knobTwo(7, 8);
-long positionLeft  = -999;
+long positionLeft = -999;
 long positionRight = -999;
 
 const int amount = 8;
@@ -62,29 +62,51 @@ void setup() {
 
 void loop() {
 
-  analogWrite(9, 255-255);
- analogWrite(10, 255-0);
- analogWrite(11, 255-255);
+
 
 
 
 
   //Read encoderPos
-    long newLeft, newRight;
+  long newLeft, newRight;
+  long scaledLeft, scaledRight;
   newLeft = knobOne.read();
-  newRight = knobTwo.read();
-  if (newLeft != positionLeft || newRight != positionRight) {
+  scaledLeft = newLeft/4;
 
+  newRight = knobTwo.read();
+  scaledRight = newRight/4;
+
+  if (newLeft != positionLeft || newRight != positionRight) {
     positionLeft = newLeft;
     positionRight = newRight;
-  }
-    Serial.print("Left = ");
-    Serial.print(newLeft);
-    Serial.print(", Right = ");
-    Serial.print(newRight);
-    Serial.println();
 
-    
+  }
+    if(scaledRight >= 127){
+    scaledRight = 127;
+  } else if (scaledRight <= 0){
+    scaledRight = 0;
+  }
+
+    if(scaledLeft >= 127){
+    scaledLeft = 127;
+  } else if (scaledLeft <= 0){
+    scaledLeft = 0;
+  }
+
+  Serial.print("Left = ");
+  Serial.print(scaledLeft);
+  Serial.print(", Right = ");
+  Serial.print(scaledRight);
+  Serial.println();
+
+
+
+
+  analogWrite(9, 255 - scaledLeft*2);
+  analogWrite(10, 255 - scaledRight*2);
+  analogWrite(11, 255 - 255);
+
+
   Serial.print("knops: ");
 
   Serial.print(knopCheck(BUTTON1_PIN, 1));
@@ -103,7 +125,7 @@ void loop() {
   for (int i = 0; i < amount; i++) {
 
     Serial.print(sensorValue[i]);
-     Serial.print(" ");
+    Serial.print(" ");
   };
   Serial.println();
 
