@@ -165,6 +165,7 @@ void menu() {
 }
 
 void readEncoderPos() {
+  //read encodepositions and scale them to 0 - 127
   long newLeft, newRight;
   long scaledLeft, scaledRight;
   newLeft = knobOne.read();
@@ -201,6 +202,7 @@ void readEncoderPos() {
 }
 
 void readButton() {
+  //check both buttons for state
   Serial.print("knops: ");
 
   Serial.print(knopCheck(BUTTON1_PIN, 1));
