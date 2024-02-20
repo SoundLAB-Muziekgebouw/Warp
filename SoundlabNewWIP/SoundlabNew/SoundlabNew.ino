@@ -12,7 +12,7 @@ const int sensorPin[amount] = { 16, 17, 18, 19, 20, 21, 22, 23 };
 int sensorValue[amount] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 int scaledSensorValue[amount] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-int sensorMax[amount] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+int sensorMax[amount] = { 1023,1023,1023,1023,1023,1023,1023,1023 };
 int sensorMin[amount] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 int menuHeader = 0;
@@ -107,7 +107,7 @@ void calibrate() {
   } else if (calibrationState == 2) {
     colorLed(255, 255, 0);
   } else if (calibrationState == 0) {
-    colorLed(255, 255, 255);
+    colorLed(volume*2, volume*2, volume*2);
   }
 }
 
@@ -117,18 +117,9 @@ void readSensors() {
     //read sensordata
     sensorValue[i] = analogRead(sensorPin[i]);
     scaledSensorValue[i] = map(analogRead(sensorPin[i]), sensorMin[i], sensorMax[i], 0, 127);
-    scaledSensorValue[i] = i;
+
   };
   midi();
-
-  // Serial.print("sensors ");
-
-  // for (int i = 0; i < amount; i++) {
-
-  //   Serial.print(scaledSensorValue[i]);
-  //   Serial.print(" ");
-  // };
-  // Serial.println();
 }
 
 
