@@ -48,6 +48,9 @@ String onOff;
 
 int readingButton;
 int calibrationState = 1;
+int volume = 127;
+  long scaledLeft, scaledRight;
+
 
 
 
@@ -72,7 +75,9 @@ void loop() {
 }
 
 void calibrate() {
-
+  if(calibrationState == 0){
+    volume = scaledLeft;
+  }
   if (buttonState == LOW && buttonState2 == LOW) {
     calibrationState = 1;
 
@@ -119,6 +124,8 @@ void readSensors() {
     //read sensordata
     sensorValue[i] = analogRead(sensorPin[i]);
     scaledSensorValue[i] = map(analogRead(sensorPin[i]), sensorMin[i], sensorMax[i], 0, 127);
+    scaledSensorValue[i] = i;
+
   };
   midi();
 
@@ -132,7 +139,6 @@ void readSensors() {
   // Serial.println();
 
 
-  // usbMIDI.sendControlChange(10, volume_param, 1);
 }
 
 
@@ -197,7 +203,6 @@ void menu() {
 void readEncoderPos() {
   //read encoderpositions and scale them to 0 - 127
   long newLeft, newRight;
-  long scaledLeft, scaledRight;
   newLeft = knobOne.read();
   scaledLeft = newLeft / 4;
 
@@ -236,7 +241,7 @@ void readButton() {
   knopCheck(BUTTON2_PIN, 2);
 }
 
-void midi() {
+void midi() {//send midi message: (Controller number, Control Value, Midi Channel) (CN 1-8 are sensors, CN 9 is Volume)
   usbMIDI.sendControlChange(1, scaledSensorValue[0], 1);
   usbMIDI.sendControlChange(2, scaledSensorValue[1], 1);
   usbMIDI.sendControlChange(3, scaledSensorValue[2], 1);
@@ -245,4 +250,5 @@ void midi() {
   usbMIDI.sendControlChange(6, scaledSensorValue[5], 1);
   usbMIDI.sendControlChange(7, scaledSensorValue[6], 1);
   usbMIDI.sendControlChange(8, scaledSensorValue[7], 1);
+  usbMIDI.sendControlChange(9, volume, 1);
 }
