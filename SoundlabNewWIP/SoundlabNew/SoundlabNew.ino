@@ -12,7 +12,7 @@ const int sensorPin[amount] = { 16, 17, 18, 19, 20, 21, 22, 23 };
 int sensorValue[amount] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 int scaledSensorValue[amount] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-int sensorMax[amount] = { 1023,1023,1023,1023,1023,1023,1023,1023 };
+int sensorMax[amount] = { 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023 };
 int sensorMin[amount] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 int menuHeader = 0;
@@ -47,7 +47,7 @@ unsigned long debounceDelay = 50;
 String onOff;
 
 int readingButton;
-int calibrationState = 1;
+int calibrationState = 0;
 int volume = 127;
 long scaledLeft, scaledRight;
 
@@ -80,34 +80,49 @@ void calibrate() {
   }
   if (buttonState == LOW && buttonState2 == LOW) {
     calibrationState = 1;
+    Serial.print(calibrationState);
+    Serial.println(" :calibrationStat");
 
-    Serial.println("calibrate min values:");
   } else if (buttonState == LOW && calibrationState == 1) {
     calibrationState = 2;
+    Serial.print(calibrationState);
+    Serial.println(" :calibrationStat");
+
+    Serial.println("calibrate min values:");
+  } else if (buttonState2 == LOW && calibrationState == 2) {
+    calibrationState = 3;
     for (int i = 0; i < amount; i++) {
       sensorMin[i] = sensorValue[i];
       Serial.println(sensorMin[i]);
     }
+    Serial.print(calibrationState);
+    Serial.println(" :calibrationStat");
+
     Serial.println("calibrate max values:");
 
 
-  } else if (buttonState2 == LOW && calibrationState == 2) {
+  } else if (buttonState == LOW && calibrationState == 3) {
 
     for (int i = 0; i < amount; i++) {
       sensorMax[i] = sensorValue[i];
       Serial.println(sensorMax[i]);
     }
     calibrationState = 0;
+    Serial.print(calibrationState);
+    Serial.println(" :calibrationStat");
+
     Serial.println("Calibrating done");
   }
 
 
   if (calibrationState == 1) {
-    colorLed(255, 0, 0);
-  } else if (calibrationState == 2) {
     colorLed(255, 255, 0);
+  } else if (calibrationState == 2) {
+    colorLed(255, 0, 0);
+  } else if (calibrationState == 3) {
+    colorLed(255, 127, 0);
   } else if (calibrationState == 0) {
-    colorLed(volume*2, volume*2, volume*2);
+    colorLed(volume * 2, volume * 2, volume * 2);
   }
 }
 
@@ -117,7 +132,6 @@ void readSensors() {
     //read sensordata
     sensorValue[i] = analogRead(sensorPin[i]);
     scaledSensorValue[i] = map(analogRead(sensorPin[i]), sensorMin[i], sensorMax[i], 0, 127);
-
   };
   midi();
 }
