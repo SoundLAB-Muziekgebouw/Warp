@@ -39,8 +39,8 @@ int lastButtonState2 = HIGH;  // the previous reading from the input pin
 unsigned long lastDebounceTime = 0;   // the last time the output pin was toggled
 unsigned long lastDebounceTime2 = 0;  // the last time the output pin was toggled
 
-bool clicked = false; //creates button toggle
-bool clicked2 = false; //creates button toggle
+bool clicked = false;   //creates button toggle
+bool clicked2 = false;  //creates button toggle
 
 unsigned long debounceDelay = 50;
 
@@ -49,7 +49,7 @@ String onOff;
 int readingButton;
 int calibrationState = 1;
 int volume = 127;
-  long scaledLeft, scaledRight;
+long scaledLeft, scaledRight;
 
 
 
@@ -75,7 +75,7 @@ void loop() {
 }
 
 void calibrate() {
-  if(calibrationState == 0){
+  if (calibrationState == 0) {
     volume = scaledLeft;
   }
   if (buttonState == LOW && buttonState2 == LOW) {
@@ -99,22 +99,15 @@ void calibrate() {
     }
     calibrationState = 0;
     Serial.println("Calibrating done");
-
   }
 
 
   if (calibrationState == 1) {
-    analogWrite(9, 0);
-    analogWrite(10, 0);
-    analogWrite(11, 255);
+    colorLed(255, 0, 0);
   } else if (calibrationState == 2) {
-    analogWrite(9, 255);
-    analogWrite(10, 0);
-    analogWrite(11, 255);
+    colorLed(255, 255, 0);
   } else if (calibrationState == 0) {
-    analogWrite(9, 255);
-    analogWrite(10, 255);
-    analogWrite(11, 255);
+    colorLed(255, 255, 255);
   }
 }
 
@@ -125,7 +118,6 @@ void readSensors() {
     sensorValue[i] = analogRead(sensorPin[i]);
     scaledSensorValue[i] = map(analogRead(sensorPin[i]), sensorMin[i], sensorMax[i], 0, 127);
     scaledSensorValue[i] = i;
-
   };
   midi();
 
@@ -137,8 +129,6 @@ void readSensors() {
   //   Serial.print(" ");
   // };
   // Serial.println();
-
-
 }
 
 
@@ -241,7 +231,7 @@ void readButton() {
   knopCheck(BUTTON2_PIN, 2);
 }
 
-void midi() {//send midi message: (Controller number, Control Value, Midi Channel) (CN 1-8 are sensors, CN 9 is Volume)
+void midi() {  //send midi message: (Controller number, Control Value, Midi Channel) (CN 1-8 are sensors, CN 9 is Volume)
   usbMIDI.sendControlChange(1, scaledSensorValue[0], 1);
   usbMIDI.sendControlChange(2, scaledSensorValue[1], 1);
   usbMIDI.sendControlChange(3, scaledSensorValue[2], 1);
@@ -251,4 +241,10 @@ void midi() {//send midi message: (Controller number, Control Value, Midi Channe
   usbMIDI.sendControlChange(7, scaledSensorValue[6], 1);
   usbMIDI.sendControlChange(8, scaledSensorValue[7], 1);
   usbMIDI.sendControlChange(9, volume, 1);
+}
+
+void colorLed(int r, int g, int b) {
+  analogWrite(9, b);
+  analogWrite(10, g);
+  analogWrite(11, r);
 }
