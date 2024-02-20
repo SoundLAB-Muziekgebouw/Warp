@@ -120,6 +120,8 @@ void calibrate() {
       preset = 0;
     }
     calibrationState = 0;
+  } else if (buttonState == LOW && calibrationState == 1 && menuScaledLeft == 2) {
+    calibrationState = 0;
   }
 
 
@@ -127,7 +129,9 @@ void calibrate() {
     colorLed(255, 255, 0);
   } else if (calibrationState == 1 && menuScaledLeft == 1) {
     colorLed(255, 0, 255);
-  } else if (calibrationState == 2) {
+  } else if (calibrationState == 1 && menuScaledLeft == 2) {
+    colorLed(0, 0, 255);
+  }else if (calibrationState == 2) {
     colorLed(255, 0, 0);
   } else if (calibrationState == 3) {
     colorLed(255, 127, 0);
@@ -209,9 +213,26 @@ void readEncoderPos() {
   //read encoderpositions and scale them to 0 - 127
   long newLeft, newRight;
   newLeft = knobOne.read();
+  // Serial.print("newLeft: ");
+  // Serial.println(newLeft);
   scaledLeft = newLeft / 4;
-  menuScaledLeft = scaledLeft % 2;
-  Serial.println(menuScaledLeft);
+
+  if (scaledLeft < 0) {
+    menuScaledLeft = (-1 * scaledLeft) % 3;
+
+  } else {
+    menuScaledLeft = scaledLeft % 3;
+
+  }
+    Serial.print("menuScaledLeft: ");
+    Serial.println(menuScaledLeft);
+  if (scaledLeft < 0) {
+    scaledLeft = 0;
+  }
+  // Serial.print("ScaledLeft: ");
+  // Serial.println(scaledLeft);
+
+
   newRight = knobTwo.read();
   scaledRight = newRight / 4;
 
