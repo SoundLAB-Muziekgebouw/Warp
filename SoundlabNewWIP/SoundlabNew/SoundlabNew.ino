@@ -49,7 +49,8 @@ String onOff;
 int readingButton;
 int calibrationState = 0;
 int volume = 127;
-long scaledLeft, scaledRight;
+long scaledLeft, scaledRight, menuScaledLeft;
+int preset = 0;
 
 
 
@@ -83,7 +84,7 @@ void calibrate() {
     Serial.print(calibrationState);
     Serial.println(" :calibrationStat");
 
-  } else if (buttonState == LOW && calibrationState == 1) {
+  } else if (buttonState == LOW && calibrationState == 1 && menuScaledLeft == 1) {
     calibrationState = 2;
     Serial.print(calibrationState);
     Serial.println(" :calibrationStat");
@@ -112,11 +113,20 @@ void calibrate() {
     Serial.println(" :calibrationStat");
 
     Serial.println("Calibrating done");
+  } else if (buttonState == LOW && calibrationState == 1 && menuScaledLeft == 0) {
+    if (preset == 0) {
+      preset = 1;
+    } else {
+      preset = 0;
+    }
+    calibrationState = 0;
   }
 
 
-  if (calibrationState == 1) {
+  if (calibrationState == 1 && menuScaledLeft == 0) {
     colorLed(255, 255, 0);
+  } else if (calibrationState == 1 && menuScaledLeft == 1) {
+    colorLed(255, 0, 255);
   } else if (calibrationState == 2) {
     colorLed(255, 0, 0);
   } else if (calibrationState == 3) {
@@ -200,7 +210,8 @@ void readEncoderPos() {
   long newLeft, newRight;
   newLeft = knobOne.read();
   scaledLeft = newLeft / 4;
-
+  menuScaledLeft = scaledLeft % 2;
+  Serial.println(menuScaledLeft);
   newRight = knobTwo.read();
   scaledRight = newRight / 4;
 
@@ -246,6 +257,7 @@ void midi() {  //send midi message: (Controller number, Control Value, Midi Chan
   usbMIDI.sendControlChange(7, scaledSensorValue[6], 1);
   usbMIDI.sendControlChange(8, scaledSensorValue[7], 1);
   usbMIDI.sendControlChange(9, volume, 1);
+  usbMIDI.sendControlChange(10, preset, 1);
 }
 
 void colorLed(int r, int g, int b) {
