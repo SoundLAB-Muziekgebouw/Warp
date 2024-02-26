@@ -12,8 +12,8 @@ const int sensorPin[amount] = { 16, 17, 18, 19, 20, 21, 22, 23 };
 int sensorValue[amount] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 int scaledSensorValue[amount] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-int sensorMax[amount] = { 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023 };
-int sensorMin[amount] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+int sensorMin[amount] = { 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023 };
+int sensorMax[amount] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 int menuHeader = 0;
 int menuSettings[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -51,6 +51,7 @@ int calibrationState = 0;
 int volume = 127;
 long scaledLeft, scaledRight, menuScaledLeft;
 int preset = 0;
+bool calibrating = false;
 
 
 
@@ -63,7 +64,7 @@ void setup() {
   pinMode(10, OUTPUT);
   pinMode(11, OUTPUT);
   Serial.begin(115200);
-  Serial.println("calibrate min values:");
+  Serial.println("boot");
 }
 
 void loop() {
@@ -76,51 +77,64 @@ void loop() {
 }
 
 void calibrate() {
-  if (calibrationState == 0) {
+  if (calibrationState == 0) {  // White
     volume = scaledLeft;
   }
-  if (buttonState == LOW && buttonState2 == LOW) {
-    calibrationState = 1;
-    Serial.print(calibrationState);
-    Serial.println(" :calibrationStat");
+  if (buttonState == LOW && buttonState2 == LOW) {  //Menu
+    setCalState(1);
 
-  } else if (buttonState == LOW && calibrationState == 1 && menuScaledLeft == 1) {
-    calibrationState = 2;
-    Serial.print(calibrationState);
-    Serial.println(" :calibrationStat");
-
+  } else if (buttonState == LOW && calibrationState == 1 && menuScaledLeft == 1) {  //calibration start
+    calibrating = true;
+    setCalState(2);
     Serial.println("calibrate min values:");
-  } else if (buttonState2 == LOW && calibrationState == 2) {
-    calibrationState = 3;
-    for (int i = 0; i < amount; i++) {
-      sensorMin[i] = sensorValue[i];
-      Serial.println(sensorMin[i]);
+
+    while (calibrating) {
+      if (calibrationState == 2) {
+        delay(100);
+        Serial.println("Cal Min");
+        readButton();
+        for (int i = 0; i < amount; i++) {  // recording min values
+          sensorValue[i] = analogRead(sensorPin[i]);
+          if (sensorValue[i] < sensorMin[i]) {
+            sensorMin[i] = sensorValue[i];
+          }
+        }
+
+        if (buttonState2 == LOW && calibrationState == 2) {
+          calibrationState = 3;
+        }
+      }
+
+      if (calibrationState == 3) {
+        delay(100);
+        Serial.println("Cal Max");
+
+        readButton();
+        for (int i = 0; i < amount; i++) {  // recording max values
+
+          sensorValue[i] = analogRead(sensorPin[i]);
+          if (sensorValue[i] > sensorMax[i]) {
+            sensorMax[i] = sensorValue[i];
+          }
+        }
+
+        if (buttonState == LOW && calibrationState == 3) {
+          setCalState(0);
+          Serial.println("Calibrating done");
+          calibrating = false;
+        }
+      }
     }
-    Serial.print(calibrationState);
-    Serial.println(" :calibrationStat");
 
-    Serial.println("calibrate max values:");
-
-
-  } else if (buttonState == LOW && calibrationState == 3) {
-
-    for (int i = 0; i < amount; i++) {
-      sensorMax[i] = sensorValue[i];
-      Serial.println(sensorMax[i]);
-    }
-    calibrationState = 0;
-    Serial.print(calibrationState);
-    Serial.println(" :calibrationStat");
-
-    Serial.println("Calibrating done");
-  } else if (buttonState == LOW && calibrationState == 1 && menuScaledLeft == 0) {
+  } else if (buttonState == LOW && calibrationState == 1 && menuScaledLeft == 0) {  // Change Preset
     if (preset == 0) {
       preset = 1;
     } else {
       preset = 0;
     }
     calibrationState = 0;
-  } else if (buttonState == LOW && calibrationState == 1 && menuScaledLeft == 2) {
+
+  } else if (buttonState == LOW && calibrationState == 1 && menuScaledLeft == 2) {  //Cancel Menu
     calibrationState = 0;
   }
 
@@ -131,7 +145,7 @@ void calibrate() {
     colorLed(255, 0, 255);
   } else if (calibrationState == 1 && menuScaledLeft == 2) {
     colorLed(0, 0, 255);
-  }else if (calibrationState == 2) {
+  } else if (calibrationState == 2) {
     colorLed(255, 0, 0);
   } else if (calibrationState == 3) {
     colorLed(255, 127, 0);
@@ -199,9 +213,6 @@ bool knopCheck(int pin, int pinChoice) {
     }
     lastButtonState2 = readingButton;
   }
-  // Serial.print(pin);
-  // Serial.print(".  ");
-  // Serial.println(result);
 
   return result;
 }
@@ -222,10 +233,9 @@ void readEncoderPos() {
 
   } else {
     menuScaledLeft = scaledLeft % 3;
-
   }
-    Serial.print("menuScaledLeft: ");
-    Serial.println(menuScaledLeft);
+  // Serial.print("menuScaledLeft: ");
+  // Serial.println(menuScaledLeft);
   if (scaledLeft < 0) {
     scaledLeft = 0;
   }
@@ -285,4 +295,10 @@ void colorLed(int r, int g, int b) {
   analogWrite(9, b);
   analogWrite(10, g);
   analogWrite(11, r);
+}
+
+void setCalState(int x) {
+  calibrationState = x;
+  Serial.print("calibrationStat: ");
+  Serial.println(calibrationState);
 }
