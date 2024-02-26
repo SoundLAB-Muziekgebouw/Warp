@@ -48,11 +48,13 @@ String onOff;
 
 int readingButton;
 int calibrationState = 0;
+int menuState = 0;
 int volume = 127;
 long scaledLeft, scaledRight, menuScaledLeft;
 int preset = 0;
 bool calibrating = false;
-
+bool menuSwitch = false;
+bool pressed = false;
 
 
 
@@ -72,85 +74,92 @@ void loop() {
   readSensors();
   readEncoderPos();
   readButton();
-  calibrate();
+
+  if (buttonState == LOW && buttonState2 == LOW) {
+    menuSwitch = true;  //activate menu
+    pressed = true;
+  }
+
+  if (menuSwitch) {
+    menu();
+  } else {
+    volume = scaledLeft;
+    colorLed(volume * 2, volume * 2, volume * 2);
+  }
+
+
   delay(20);
 }
 
-void calibrate() {
-  if (calibrationState == 0) {  // White
-    volume = scaledLeft;
+void menu() {
+  while (pressed) {
+    readButton();
+    if (buttonState == HIGH && buttonState2 == HIGH) {
+      pressed = false;  //activate menu
+    }
   }
-  if (buttonState == LOW && buttonState2 == LOW) {  //Menu
-    setCalState(1);
 
-  } else if (buttonState == LOW && calibrationState == 1 && menuScaledLeft == 1) {  //calibration start
-    calibrating = true;
-    setCalState(2);
-    Serial.println("calibrate min values:");
+  if (buttonState == LOW && menuState == 0) {//Calibration
+    colorLed(50,50,50); // wave led
+    calibrating = true;  
+    Serial.println("Calibrate min values.");
 
     while (calibrating) {
-      if (calibrationState == 2) {
-        delay(100);
-        Serial.println("Cal Min");
+      if (calibrationState == 0) {
         readButton();
         for (int i = 0; i < amount; i++) {  // recording min values
           sensorValue[i] = analogRead(sensorPin[i]);
           if (sensorValue[i] < sensorMin[i]) {
             sensorMin[i] = sensorValue[i];
+            blink(255, 0, 0, 25);
           }
         }
 
-        if (buttonState2 == LOW && calibrationState == 2) {
-          calibrationState = 3;
+        if (buttonState2 == LOW) {
+          calibrationState = 1;
+          Serial.println("Calibrate max values.");
         }
       }
 
-      if (calibrationState == 3) {
-        delay(100);
-        Serial.println("Cal Max");
-
+      if (calibrationState == 1) {
         readButton();
+        delay(50);
         for (int i = 0; i < amount; i++) {  // recording max values
-
           sensorValue[i] = analogRead(sensorPin[i]);
           if (sensorValue[i] > sensorMax[i]) {
             sensorMax[i] = sensorValue[i];
+            blink(255, 0, 0, 25);
           }
         }
 
-        if (buttonState == LOW && calibrationState == 3) {
-          setCalState(0);
-          Serial.println("Calibrating done");
+        if (buttonState == LOW) {
           calibrating = false;
+          calibrationState = 0;
+          Serial.println("Calibration done.");
+          menuSwitch = false;
         }
       }
     }
 
-  } else if (buttonState == LOW && calibrationState == 1 && menuScaledLeft == 0) {  // Change Preset
+  } else if (buttonState == LOW && menuState == 1) {  //Change Preset
     if (preset == 0) {
       preset = 1;
     } else {
       preset = 0;
     }
-    calibrationState = 0;
-
-  } else if (buttonState == LOW && calibrationState == 1 && menuScaledLeft == 2) {  //Cancel Menu
-    calibrationState = 0;
+    menuSwitch = false;
+  } else if (buttonState == LOW && menuState == 2) {  //Cancel Menu
+    menuSwitch = false;
   }
 
-
-  if (calibrationState == 1 && menuScaledLeft == 0) {
-    colorLed(255, 255, 0);
-  } else if (calibrationState == 1 && menuScaledLeft == 1) {
-    colorLed(255, 0, 255);
-  } else if (calibrationState == 1 && menuScaledLeft == 2) {
-    colorLed(0, 0, 255);
-  } else if (calibrationState == 2) {
-    colorLed(255, 0, 0);
-  } else if (calibrationState == 3) {
-    colorLed(255, 127, 0);
-  } else if (calibrationState == 0) {
-    colorLed(volume * 2, volume * 2, volume * 2);
+  if (menuSwitch) {
+    if (menuState == 0) {
+      colorLed(255, 0, 255);
+    } else if (menuState == 1) {
+      colorLed(0, 0, 255);
+    } else if (menuState == 2) {
+      colorLed(0, 255, 0);
+    }
   }
 }
 
@@ -163,7 +172,6 @@ void readSensors() {
   };
   midi();
 }
-
 
 bool knopCheck(int pin, int pinChoice) {
   //check for selected button if pressed
@@ -217,30 +225,20 @@ bool knopCheck(int pin, int pinChoice) {
   return result;
 }
 
-void menu() {
-}
-
 void readEncoderPos() {
   //read encoderpositions and scale them to 0 - 127
   long newLeft, newRight;
   newLeft = knobOne.read();
-  // Serial.print("newLeft: ");
-  // Serial.println(newLeft);
+
   scaledLeft = newLeft / 4;
-
-  if (scaledLeft < 0) {
-    menuScaledLeft = (-1 * scaledLeft) % 3;
-
-  } else {
-    menuScaledLeft = scaledLeft % 3;
-  }
-  // Serial.print("menuScaledLeft: ");
-  // Serial.println(menuScaledLeft);
   if (scaledLeft < 0) {
     scaledLeft = 0;
   }
-  // Serial.print("ScaledLeft: ");
-  // Serial.println(scaledLeft);
+  // if (menuSwitch) {
+    setMenuState(scaledLeft % 3);
+  // }
+
+
 
 
   newRight = knobTwo.read();
@@ -261,24 +259,15 @@ void readEncoderPos() {
   } else if (scaledLeft <= 0) {
     scaledLeft = 0;
   }
-
-  // Serial.print("Left = ");
-  // Serial.print(scaledLeft);
-  // Serial.print(", Right = ");
-  // Serial.print(scaledRight);
-  // Serial.println();
 }
 
 void readButton() {
   //check both buttons for state
-  // Serial.print("knops: ");
-
   knopCheck(BUTTON1_PIN, 1);
-  // Serial.print("  ");
   knopCheck(BUTTON2_PIN, 2);
 }
 
-void midi() {  //send midi message: (Controller number, Control Value, Midi Channel) (CN 1-8 are sensors, CN 9 is Volume)
+void midi() {  //send midi message: (Controller number, Control Value, Midi Channel) (CN 1-8 = sensors, CN 9 = Volume, CN 10 = preset)
   usbMIDI.sendControlChange(1, scaledSensorValue[0], 1);
   usbMIDI.sendControlChange(2, scaledSensorValue[1], 1);
   usbMIDI.sendControlChange(3, scaledSensorValue[2], 1);
@@ -296,9 +285,14 @@ void colorLed(int r, int g, int b) {
   analogWrite(10, g);
   analogWrite(11, r);
 }
-
-void setCalState(int x) {
-  calibrationState = x;
-  Serial.print("calibrationStat: ");
-  Serial.println(calibrationState);
+void blink(int r, int g, int b, int dur){
+  colorLed(r, g, b);
+  delay(dur);
+  colorLed(50,50,50);
+  delay(dur);
+}
+void setMenuState(int x) {
+  menuState = x;
+  // Serial.print("menuState: ");
+  // Serial.println(menuState);
 }
