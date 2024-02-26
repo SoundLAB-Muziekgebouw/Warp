@@ -49,7 +49,7 @@ String onOff;
 int readingButton;
 int calibrationState = 0;
 int menuState = 0;
-int volume = 127;
+float volume = 127;
 long scaledLeft, scaledRight, menuScaledLeft;
 int preset = 0;
 bool calibrating = false;
@@ -84,7 +84,16 @@ void loop() {
     menu();
   } else {
     volume = scaledLeft;
-    colorLed(volume * 2, volume * 2, volume * 2);
+    if(volume == 127){
+      colorLed(255,100,100);
+    } else {
+      int volumeScaled = volume;
+      if( volumeScaled >= 200){
+        volumeScaled = 200;
+      }
+      colorLed(volumeScaled, volume * 0.5, volume * 0.5);
+
+    }
   }
 
 
