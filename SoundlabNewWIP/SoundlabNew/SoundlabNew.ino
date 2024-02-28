@@ -1,53 +1,31 @@
 #include <Encoder.h>
 #include <EEPROM.h>
 
-
 Encoder knobOne(7, 8);
 Encoder knobTwo(5, 6);
 long positionLeft = -999;
 long positionRight = -999;
-
 const int amount = 8;
-float smoothingFactor = 0.09;
-
 const int sensorPin[amount] = { 16, 17, 18, 19, 20, 21, 22, 23 };
 int sensorValue[amount] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 int scaledSensorValue[amount] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-
 int sensorMin[amount] = { 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023 };
 int sensorMax[amount] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-
-int menuHeader = 0;
-int menuSettings[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-
-int state = 0;
-
 //buttonstarts here
 const int BUTTON1_PIN = 2;  // the number of the pushbutton pin
 const int BUTTON2_PIN = 3;  // the number of the pushbutton pin
-
 // Variables will change:
 int lastState = HIGH;   // the previous state from the input pin
 int lastState2 = HIGH;  // the previous state from the input pin
-
-
 int buttonState = HIGH;
 int buttonState2 = HIGH;
-
 int lastButtonState = HIGH;   // the previous reading from the input pin
 int lastButtonState2 = HIGH;  // the previous reading from the input pin
-
-
 unsigned long lastDebounceTime = 0;   // the last time the output pin was toggled
 unsigned long lastDebounceTime2 = 0;  // the last time the output pin was toggled
-
 bool clicked = false;   //creates button toggle
 bool clicked2 = false;  //creates button toggle
-
 unsigned long debounceDelay = 50;
-
-String onOff;
-
 int readingButton;
 int calibrationState = 0;
 int menuState = 0;
@@ -57,7 +35,6 @@ int preset = 0;
 bool calibrating = false;
 bool menuSwitch = false;
 bool pressed = false;
-
 unsigned int addr = 0;
 
 
@@ -100,8 +77,8 @@ void loop() {
     }
   }
 
-
-  delay(20);
+  midi();
+  // delay(20);  //unnecessary
 }
 
 void menu() {
@@ -174,12 +151,14 @@ void menu() {
     if (menuState == 0) {
       colorLed(255, 0, 255);
     } else if (menuState == 1) {
-      colorLed(0, 0, 255);
-    } else if (menuState == 2) {
       colorLed(0, 255, 0);
+    } else if (menuState == 2) {
+      colorLed(0, 0, 255);
     }
   }
+
 }
+
 void writeCalibration(int min[], int max[]) {
   for (int i = 0; i < amount; i++) {
     EEPROM.write(i, min[i] / 4);
@@ -192,18 +171,18 @@ void writeCalibration(int min[], int max[]) {
 
 void readCalibration() {
   for (int i = 0; i < amount; i++) {
-    Serial.print(i);
-    Serial.print(" , MinE = ");
-    Serial.print(EEPROM.read(i));
+    // Serial.print(i);
+    // Serial.print(" , MinE = ");
+    // Serial.print(EEPROM.read(i));
     sensorMin[i] = EEPROM.read(i);
-    Serial.print(" , MaxE = ");
-    Serial.print(EEPROM.read(i + amount));
+    // Serial.print(" , MaxE = ");
+    // Serial.print(EEPROM.read(i + amount));
     sensorMax[i] = EEPROM.read(i + amount);
 
-    Serial.print(", minV = ");
-    Serial.print(sensorMin[i]);
-    Serial.print(", maxV = ");
-    Serial.println(sensorMax[i]);
+    // Serial.print(", minV = ");
+    // Serial.print(sensorMin[i]);
+    // Serial.print(", maxV = ");
+    // Serial.println(sensorMax[i]);
   }
 }
 
@@ -214,7 +193,6 @@ void readSensors() {
     sensorValue[i] = analogRead(sensorPin[i]);
     scaledSensorValue[i] = map(analogRead(sensorPin[i]), sensorMin[i] * 4, sensorMax[i] * 4, 0, 127);
   };
-  midi();
 }
 
 bool knopCheck(int pin, int pinChoice) {
@@ -278,12 +256,7 @@ void readEncoderPos() {
   if (scaledLeft < 0) {
     scaledLeft = 0;
   }
-  // if (menuSwitch) {
   setMenuState(scaledLeft % 3);
-  // }
-
-
-
 
   newRight = knobTwo.read();
   scaledRight = newRight / 4;
@@ -312,14 +285,9 @@ void readButton() {
 }
 
 void midi() {  //send midi message: (Controller number, Control Value, Midi Channel) (CN 1-8 = sensors, CN 9 = Volume, CN 10 = preset)
-  usbMIDI.sendControlChange(1, scaledSensorValue[0], 1);
-  usbMIDI.sendControlChange(2, scaledSensorValue[1], 1);
-  usbMIDI.sendControlChange(3, scaledSensorValue[2], 1);
-  usbMIDI.sendControlChange(4, scaledSensorValue[3], 1);
-  usbMIDI.sendControlChange(5, scaledSensorValue[4], 1);
-  usbMIDI.sendControlChange(6, scaledSensorValue[5], 1);
-  usbMIDI.sendControlChange(7, scaledSensorValue[6], 1);
-  usbMIDI.sendControlChange(8, scaledSensorValue[7], 1);
+  for (int i = 0; i < amount; i++) {
+    usbMIDI.sendControlChange(i + 1, scaledSensorValue[i], 1);
+  }
   usbMIDI.sendControlChange(9, volume, 1);
   usbMIDI.sendControlChange(10, preset, 1);
 }
@@ -329,12 +297,14 @@ void colorLed(int r, int g, int b) {
   analogWrite(10, g);
   analogWrite(11, r);
 }
+
 void blink(int r, int g, int b, int dur) {
   colorLed(r, g, b);
   delay(dur);
   colorLed(50, 50, 50);
   delay(dur);
 }
+
 void setMenuState(int x) {
   menuState = x;
   // Serial.print("menuState: ");
