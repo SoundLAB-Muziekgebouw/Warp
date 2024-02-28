@@ -41,11 +41,12 @@ unsigned int addr = 0;
 void setup() {
   pinMode(BUTTON1_PIN, INPUT_PULLUP);
   pinMode(BUTTON2_PIN, INPUT_PULLUP);
-
   pinMode(9, OUTPUT);
   pinMode(10, OUTPUT);
   pinMode(11, OUTPUT);
+
   Serial.begin(115200);
+
   readCalibration();
   Serial.println("boot");
   blink(255, 255, 255, 50);
@@ -78,7 +79,6 @@ void loop() {
   }
 
   midi();
-  // delay(20);  //unnecessary
 }
 
 void menu() {
