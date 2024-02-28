@@ -212,7 +212,7 @@ void readSensors() {
   for (int i = 0; i < amount; i++) {
     //read sensordata
     sensorValue[i] = analogRead(sensorPin[i]);
-    scaledSensorValue[i] = map(analogRead(sensorPin[i]), sensorMin[i], sensorMax[i], 0, 127);
+    scaledSensorValue[i] = map(analogRead(sensorPin[i]), sensorMin[i] * 4, sensorMax[i] * 4, 0, 127);
   };
   midi();
 }
