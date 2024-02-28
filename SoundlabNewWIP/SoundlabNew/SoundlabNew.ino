@@ -1,4 +1,6 @@
 #include <Encoder.h>
+#include <EEPROM.h>
+
 
 Encoder knobOne(7, 8);
 Encoder knobTwo(5, 6);
@@ -56,6 +58,7 @@ bool calibrating = false;
 bool menuSwitch = false;
 bool pressed = false;
 
+unsigned int addr = 0;
 
 
 void setup() {
@@ -66,7 +69,9 @@ void setup() {
   pinMode(10, OUTPUT);
   pinMode(11, OUTPUT);
   Serial.begin(115200);
+  readCalibration();
   Serial.println("boot");
+  blink(255, 255, 255, 50);
 }
 
 void loop() {
@@ -84,15 +89,14 @@ void loop() {
     menu();
   } else {
     volume = scaledLeft;
-    if(volume == 127){
-      colorLed(255,100,100);
+    if (volume == 127) {
+      colorLed(255, 100, 100);
     } else {
       int volumeScaled = volume;
-      if( volumeScaled >= 200){
+      if (volumeScaled >= 200) {
         volumeScaled = 200;
       }
       colorLed(volumeScaled, volume * 0.5, volume * 0.5);
-
     }
   }
 
@@ -108,9 +112,13 @@ void menu() {
     }
   }
 
-  if (buttonState == LOW && menuState == 0) {//Calibration
-    colorLed(50,50,50); // wave led
-    calibrating = true;  
+  if (buttonState == LOW && menuState == 0) {  //Calibration
+    colorLed(50, 50, 50);                      // wave led
+    calibrating = true;
+    for (int i = 0; i < amount; i++) {
+      sensorMin[i] = 1023;
+      sensorMax[i] = 0;
+    }
     Serial.println("Calibrate min values.");
 
     while (calibrating) {
@@ -142,6 +150,7 @@ void menu() {
         }
 
         if (buttonState == LOW) {
+          writeCalibration(sensorMin, sensorMax);
           calibrating = false;
           calibrationState = 0;
           Serial.println("Calibration done.");
@@ -169,6 +178,32 @@ void menu() {
     } else if (menuState == 2) {
       colorLed(0, 255, 0);
     }
+  }
+}
+void writeCalibration(int min[], int max[]) {
+  for (int i = 0; i < amount; i++) {
+    EEPROM.write(i, min[i] / 4);
+  }
+  for (int i = 0; i < amount; i++) {
+    EEPROM.write(i + amount, max[i] / 4);
+  }
+  readCalibration();
+}
+
+void readCalibration() {
+  for (int i = 0; i < amount; i++) {
+    Serial.print(i);
+    Serial.print(" , MinE = ");
+    Serial.print(EEPROM.read(i));
+    sensorMin[i] = EEPROM.read(i);
+    Serial.print(" , MaxE = ");
+    Serial.print(EEPROM.read(i + amount));
+    sensorMax[i] = EEPROM.read(i + amount);
+
+    Serial.print(", minV = ");
+    Serial.print(sensorMin[i]);
+    Serial.print(", maxV = ");
+    Serial.println(sensorMax[i]);
   }
 }
 
@@ -244,7 +279,7 @@ void readEncoderPos() {
     scaledLeft = 0;
   }
   // if (menuSwitch) {
-    setMenuState(scaledLeft % 3);
+  setMenuState(scaledLeft % 3);
   // }
 
 
@@ -294,10 +329,10 @@ void colorLed(int r, int g, int b) {
   analogWrite(10, g);
   analogWrite(11, r);
 }
-void blink(int r, int g, int b, int dur){
+void blink(int r, int g, int b, int dur) {
   colorLed(r, g, b);
   delay(dur);
-  colorLed(50,50,50);
+  colorLed(50, 50, 50);
   delay(dur);
 }
 void setMenuState(int x) {
